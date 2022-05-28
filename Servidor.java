@@ -1,7 +1,9 @@
+
+/** 
 import java.net.*;
 import java.io.*;
 
-//import java.nio.charset.StandardCharsets;
+import java.nio.charset.StandardCharsets;
 
 
 public class Servidor {
@@ -31,5 +33,64 @@ public class Servidor {
             mensajeCliente.close();
         }
         catch(IOException i) {}
+    }
+}
+*/
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+
+public class ServerConnection extends Thread{
+
+    private Socket socket;
+    private DataInputStream inputStream;
+    private DataOutputStream outputStream;
+    private boolean shouldRun = true;
+
+
+
+    public ServerConnection(Socket socket) {
+        super("ServerConnectionThread");
+        this.socket = socket;
+        
+
+    }
+
+    public void sendStringToClient(String sText) {
+        try {
+            outputStream.writeUTF(sText);
+            outputStream.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void run() {
+        try {
+            inputStream = new DataInputStream(socket.getInputStream());
+            outputStream = new DataOutputStream(socket.getOutputStream());
+            System.out.println("cliente conectado");
+            //sendStringToClient("1,2,3#1,2,3");
+
+            while (shouldRun) {
+                while (inputStream.available() == 0) {
+                    try {
+                        Thread.sleep(1);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                String sTextIn = inputStream.readUTF();
+                sendStringToClient(sTextIn);
+            }
+            inputStream.close();
+            outputStream.close();
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            
+        }
     }
 }
